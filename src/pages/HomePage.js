@@ -25,7 +25,7 @@ const HomePage = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:4000/api/v1/getallUsers"
+          "https://suplierdatabackend-2.onrender.com/api/v1/getallUsers"
         );
         const data = response.data.data;
         setEmpData(data);
@@ -65,7 +65,7 @@ const HomePage = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:4000/api/v1/upload",
+        "https://suplierdatabackend-2.onrender.com/api/v1/upload",
         formData,
         {
           headers: {
@@ -111,7 +111,7 @@ const HomePage = () => {
     }
 
     try {
-      const response = await axios.post("http://localhost:4000/api/v1/createUser", {
+      const response = await axios.post("https://suplierdatabackend-2.onrender.com/api/v1/createUser", {
         supplierName,
         paymentTerms
       });
