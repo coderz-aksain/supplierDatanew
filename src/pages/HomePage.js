@@ -19,10 +19,11 @@ const HomePage = () => {
     supplierName: "",
     paymentTerms: ""
   });
-
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
+      setLoading(true);
       try {
         const response = await axios.get(
           "https://suplierdatabackend-2.onrender.com/api/v1/getallUsers"
@@ -34,6 +35,7 @@ const HomePage = () => {
         console.error("Error fetching data:", error);
         setEmpData([]);
       }
+      setLoading(false);
     };
 
     fetchData();
@@ -46,10 +48,9 @@ const HomePage = () => {
     }
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive,  } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: ".csv",
-   
   });
 
   const handleFileUpload = async (file) => {
@@ -58,12 +59,12 @@ const HomePage = () => {
       toast.error("Please select a file to upload.");
       return;
     }
-    // fetchData();
 
     const formData = new FormData();
     formData.append("csvfile", file);
 
     try {
+      setLoading(true);
       const response = await axios.post(
         "https://suplierdatabackend-2.onrender.com/api/v1/upload",
         formData,
@@ -75,19 +76,20 @@ const HomePage = () => {
       );
       setMessage(response.data);
       toast.success("File uploaded successfully!");
-      setEmpData(response.data.data); // Assuming the response contains the updated data
-      window.location.href = '/' 
+      setEmpData(response.data.data);
+      window.location.href = '/';
     } catch (error) {
       console.error("Error uploading file:", error);
       setMessage("Error in uploading file: " + error.message);
       toast.error("Error in uploading file: " + error.message);
       setEmpData([]);
     }
+    setLoading(false);
   };
 
   const handleSearch = (e) => {
     setSearchQuery(e.target.value);
-    setCurrentPage(1); // Reset to the first page on search
+    setCurrentPage(1);
   };
 
   const openModal = () => {
@@ -120,7 +122,7 @@ const HomePage = () => {
         toast.success("Supplier added successfully");
         setEmpData([...empData, response.data]);
         closeModal();
-        window.location.href = '/homepage'  
+        window.location.href = '/homepage';
       }
     } catch (error) {
       console.error("Error adding supplier:", error);
@@ -148,10 +150,9 @@ const HomePage = () => {
     currentPage * itemsPerPage
   );
   const navigate = useNavigate();
-  const LogOut =() =>{
+  const LogOut = () => {
     localStorage.removeItem('token');
-        navigate("/");
-
+    navigate("/");
   }
 
   return (
@@ -160,34 +161,22 @@ const HomePage = () => {
         <ToastContainer />
         <div className="flex flex-col space-y-4">
           <Link>
-        <button onClick={LogOut}  className="border-red-400 rounded-md  bg-indigo-600 text-white hover:text-black  hover:bg-red-400 flex items-center justify-center space-x-2 ">
-        <i className="fas fa-sign-out-alt"></i>
-        <span>Log Out</span>
-        <IoLogOut />
-        </button>         
+            <button onClick={LogOut} className="border-red-400 rounded-md bg-indigo-600 text-white hover:text-black hover:bg-red-400 flex items-center justify-center space-x-2 ">
+              <i className="fas fa-sign-out-alt"></i>
+              <span>Log Out</span>
+              <IoLogOut />
+            </button>
           </Link>
-          
-          {empData.length === 0 ? (
-            <div
-              {...getRootProps()}
-              className={`flex flex-col items-center justify-center w-full h-96 rounded-md cursor-pointer border-2 border-dotted ${
-                isDragActive ? "border-indigo-600" : "border-gray-400"
-              }`}
-            >
-              <input {...getInputProps()} />
-              {isDragActive ? (
-                <p className="text-indigo-600 text-center">Drop the file here...</p>
-              ) : (
-                <p className="text-gray-500 text-center">
-                  Drag 'n' drop a CSV file here, or click to select one
-                </p>
-              )}
+
+          {loading ? (
+            <div className="flex justify-center items-center h-96">
+              <div className="loader"></div>
             </div>
           ) : (
-            <>
+            empData.length === 0 ? (
               <div
                 {...getRootProps()}
-                className={`w-full p-14 rounded-md cursor-pointer border-2 border-dotted ${
+                className={`flex flex-col items-center justify-center w-full h-96 rounded-md cursor-pointer border-2 border-dotted ${
                   isDragActive ? "border-indigo-600" : "border-gray-400"
                 }`}
               >
@@ -200,89 +189,107 @@ const HomePage = () => {
                   </p>
                 )}
               </div>
-              <div
-                style={{ display: "flex", justifyContent: "flex-end", width: "100%" }}
-              >
-                <button
-                  onClick={openModal}
-                  className="w-full rounded-md bg-indigo-600 px-3.5 py-1.5 text-sm font-semibold leading-7 text-white hover:bg-indigo-500"
+            ) : (
+              <>
+                <div
+                  {...getRootProps()}
+                  className={`w-full p-14 rounded-md cursor-pointer border-2 border-dotted ${
+                    isDragActive ? "border-indigo-600" : "border-gray-400"
+                  }`}
                 >
-                  Add Supplier
-                </button>
-              </div>
-              <div>
-                <div className="flex mt-9">
-                  <input
-                    type="text"
-                    placeholder="Search by name"
-                    value={searchQuery}
-                    onChange={handleSearch}
-                    className="p-2 border border-gray-300 rounded-md w-full"
-                  />
+                  <input {...getInputProps()} />
+                  {isDragActive ? (
+                    <p className="text-indigo-600 text-center">Drop the file here...</p>
+                  ) : (
+                    <p className="text-gray-500 text-center">
+                      Drag 'n' drop a CSV file here, or click to select one
+                    </p>
+                  )}
                 </div>
-                <div className="flex flex-col mt-6">
-                  <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-                    <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-                      <div className="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                          <thead className="bg-gray-50 dark:bg-gray-800">
-                            <tr>
-                              <th
-                                scope="col"
-                                className="px-12 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-                              >
-                                Supplier Name
-                              </th>
-                              <th
-                                scope="col"
-                                className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
-                              >
-                                Payment Terms
-                              </th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-                            {displayedData.map((supplier, index) => (
-                              <tr key={index}>
-                                <td className="px-12 py-4 whitespace-nowrap">
-                                  <div className="text-sm text-gray-900 dark:text-white">
-                                    {supplier.suppliername}
-                                  </div>
-                                </td>
-                                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
-                                  {supplier.paymentterm}
-                                </td>
+                <div
+                  style={{ display: "flex", justifyContent: "flex-end", width: "100%" }}
+                >
+                  <button
+                    onClick={openModal}
+                    className="w-full rounded-md bg-indigo-600 px-3.5 py-1.5 text-sm font-semibold leading-7 text-white hover:bg-indigo-500"
+                  >
+                    Add Supplier
+                  </button>
+                </div>
+                <div>
+                  <div className="flex mt-9">
+                    <input
+                      type="text"
+                      placeholder="Search by name"
+                      value={searchQuery}
+                      onChange={handleSearch}
+                      className="p-2 border border-gray-300 rounded-md w-full"
+                    />
+                  </div>
+                  <div className="flex flex-col mt-6">
+                    <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+                      <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
+                        <div className="overflow-hidden border border-gray-200 dark:border-gray-700 md:rounded-lg">
+                          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                            <thead className="bg-gray-50 dark:bg-gray-800">
+                              <tr>
+                                <th
+                                  scope="col"
+                                  className="px-12 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+                                >
+                                  Supplier Name
+                                </th>
+                                <th
+                                  scope="col"
+                                  className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+                                >
+                                  Payment Terms
+                                </th>
                               </tr>
-                            ))}
-                          </tbody>
-                        </table>
+                            </thead>
+                            <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+                              {displayedData.map((supplier, index) => (
+                                <tr key={index}>
+                                  <td className="px-12 py-4 whitespace-nowrap">
+                                    <div className="text-sm text-gray-900 dark:text-white">
+                                      {supplier.suppliername}
+                                    </div>
+                                  </td>
+                                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                    {supplier.paymentterm}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <div className="flex justify-center mt-4">
+                    <nav className="flex items-center space-x-2">
+                      <button
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        disabled={currentPage === 1}
+                        className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Previous
+                      </button>
+                      <span className="px-3 py-1 text-gray-700">
+                        Page {currentPage} of {totalPages}
+                      </span>
+                      <button
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        disabled={currentPage === totalPages}
+                        className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        Next
+                      </button>
+                    </nav>
+                  </div>
                 </div>
-                <div className="flex justify-center mt-4">
-                  <nav className="flex items-center space-x-2">
-                    <button
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      disabled={currentPage === 1}
-                      className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Previous
-                    </button>
-                    <span className="px-3 py-1 text-gray-700">
-                      Page {currentPage} of {totalPages}
-                    </span>
-                    <button
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      disabled={currentPage === totalPages}
-                      className="px-3 py-1 rounded-md bg-gray-200 text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                      Next
-                    </button>
-                  </nav>
-                </div>
-              </div>
-            </>
+              </>
+            )
           )}
         </div>
 
@@ -337,6 +344,27 @@ const HomePage = () => {
           </div>
         )}
       </section>
+      <style>{`
+        .loader {
+          border: 4px solid #f3f3f3;
+          border-radius: 50%;
+          border-top: 4px solid #3498db;
+          width: 40px;
+          height: 40px;
+          -webkit-animation: spin 2s linear infinite;
+          animation: spin 2s linear infinite;
+        }
+
+        @-webkit-keyframes spin {
+          0% { -webkit-transform: rotate(0deg); }
+          100% { -webkit-transform: rotate(360deg); }
+        }
+
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };
