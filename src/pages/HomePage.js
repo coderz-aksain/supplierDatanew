@@ -1,3 +1,5 @@
+
+
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useDropzone } from "react-dropzone";
@@ -14,11 +16,18 @@ const HomePage = () => {
   const itemsPerPage = 10;
   const [selectedFile, setSelectedFile] = useState(null);
   const [message, setMessage] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [newSupplier, setNewSupplier] = useState({
     supplierName: "",
     paymentTerms: ""
   });
+  const [currentEditSupplier, setCurrentEditSupplier] = useState({
+    id: "",
+    supplierName: "",
+    paymentTerms: ""
+  });
+  // console.log("your state id" , id);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -92,17 +101,36 @@ const HomePage = () => {
     setCurrentPage(1);
   };
 
-  const openModal = () => {
-    setIsModalOpen(true);
+  const openAddModal = () => {
+    setIsAddModalOpen(true);
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
+  const closeAddModal = () => {
+    setIsAddModalOpen(false);
+  };
+
+const openEditModal = (supplier) => {
+  setCurrentEditSupplier({
+    _id: supplier._id,
+    supplierName: supplier.suppliername,
+    paymentTerms: supplier.paymentterm
+  });
+  setIsEditModalOpen(true);
+};
+
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewSupplier((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleEditInputChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentEditSupplier((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleAddSupplier = async () => {
@@ -121,12 +149,44 @@ const HomePage = () => {
       if (response.status === 200) {
         toast.success("Supplier added successfully");
         setEmpData([...empData, response.data]);
-        closeModal();
+        closeAddModal();
         window.location.href = '/homepage';
       }
     } catch (error) {
       console.error("Error adding supplier:", error);
       toast.error("Error adding supplier: " + error.message);
+    }
+  };
+
+  // const  id =  empData
+  const handleEditSupplier = async (id) => {
+    const { _id, supplierName, paymentTerms } = currentEditSupplier;
+    console.log("Your Id ",_id);
+    if(!_id){
+      console.log("Id is not present")
+    }
+    if (supplierName === "" || paymentTerms === "") {
+      toast.error("Both fields are required");
+      return;
+    }
+
+    try {                               
+      const response = await axios.put(`https://suplierdatabackend-2.onrender.com/api/v1/updateuser/${_id}`, {
+        supplierName,
+        paymentTerms
+      });
+
+      if (response.status === 200) {
+        toast.success("Supplier updated successfully");
+        setEmpData(empData.map((supplier) =>
+          supplier._id === _id ? { ...supplier, suppliername: supplierName, paymentterm: paymentTerms } : supplier
+      ));
+      // console.log("This is supplier id",supplier._id)
+        closeEditModal();
+      }
+    } catch (error) {
+      console.error("Error in updating supplier:", error);
+      toast.error("Error  in updating supplier: " + error.message);
     }
   };
 
@@ -210,7 +270,7 @@ const HomePage = () => {
                   style={{ display: "flex", justifyContent: "flex-end", width: "100%" }}
                 >
                   <button
-                    onClick={openModal}
+                    onClick={openAddModal}
                     className="w-full rounded-md bg-indigo-600 px-3.5 py-1.5 text-sm font-semibold leading-7 text-white hover:bg-indigo-500"
                   >
                     Add Supplier
@@ -245,6 +305,12 @@ const HomePage = () => {
                                 >
                                   Payment Terms
                                 </th>
+                                <th
+                                  scope="col"
+                                  className="px-4 py-3.5 text-sm font-normal text-left rtl:text-right text-gray-500 dark:text-gray-400"
+                                >
+                                  Actions
+                                </th>
                               </tr>
                             </thead>
                             <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
@@ -257,6 +323,14 @@ const HomePage = () => {
                                   </td>
                                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                     {supplier.paymentterm}
+                                  </td>
+                                  <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                                    <button
+                                      onClick={() => openEditModal(supplier   )}
+                                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-blue-600"
+                                    >
+                                      Edit
+                                    </button>
                                   </td>
                                 </tr>
                               ))}
@@ -293,8 +367,8 @@ const HomePage = () => {
           )}
         </div>
 
-        {/* Modal */}
-        {isModalOpen && (
+        {/* Add Modal */}
+        {isAddModalOpen && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
             <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
@@ -335,7 +409,58 @@ const HomePage = () => {
                 <button
                   type="button"
                   className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
-                  onClick={closeModal}
+                  onClick={closeAddModal}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Modal */}
+        {isEditModalOpen && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+            <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mt-3 text-center sm:mt-0 sm:text-left">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                      Edit Supplier
+                    </h3>
+                    <div className="mt-2">
+                      <input
+                        type="text"
+                        name="supplierName"
+                        value={currentEditSupplier.supplierName}
+                        onChange={handleEditInputChange}
+                        placeholder="Supplier Name"
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                      />
+                      <input
+                        type="text"
+                        name="paymentTerms"
+                        value={currentEditSupplier.paymentTerms}
+                        onChange={handleEditInputChange}
+                        placeholder="Payment Terms"
+                        className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={handleEditSupplier}
+                >
+                  Save
+                </button>
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                  onClick={closeEditModal}
                 >
                   Cancel
                 </button>
@@ -345,28 +470,28 @@ const HomePage = () => {
         )}
       </section>
       <style>{`
-        .loader {
-          border: 4px solid #f3f3f3;
-          border-radius: 50%;
-          border-top: 4px solid #3498db;
-          width: 40px;
-          height: 40px;
-          -webkit-animation: spin 2s linear infinite;
-          animation: spin 2s linear infinite;
-        }
+         .loader {
+           border: 4px solid #f3f3f3;
+           border-radius: 50%;
+           border-top: 4px solid #3498db;
+           width: 40px;
+           height: 40px;
+           -webkit-animation: spin 2s linear infinite;
+           animation: spin 2s linear infinite;
+         }
 
         @-webkit-keyframes spin {
-          0% { -webkit-transform: rotate(0deg); }
-          100% { -webkit-transform: rotate(360deg); }
-        }
+           0% { -webkit-transform: rotate(0deg); }
+           100% { -webkit-transform: rotate(360deg); }
+         }
 
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
-  );
-};
+         @keyframes spin {
+           0% { transform: rotate(0deg); }
+           100% { transform: rotate(360deg); }
+         }
+       `}</style>
+     </div>
+   );
+ };
 
-export default HomePage;
+ export default HomePage;
