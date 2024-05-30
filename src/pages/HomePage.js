@@ -164,6 +164,7 @@ const openEditModal = (supplier) => {
     console.log("Your Id ",_id);
     if(!_id){
       console.log("Id is not present")
+      return;
     }
     if (supplierName === "" || paymentTerms === "") {
       toast.error("Both fields are required");
@@ -175,6 +176,7 @@ const openEditModal = (supplier) => {
         supplierName,
         paymentTerms
       });
+      console.log("This  is Your Response",response);
 
       if (response.status === 200) {
         toast.success("Supplier updated successfully");
