@@ -8,6 +8,8 @@ import "react-toastify/dist/ReactToastify.css";
 import { Link } from "react-router-dom";
 import { IoLogOut } from "react-icons/io5";
 import { useNavigate } from 'react-router-dom';
+import { RiDeleteBinLine } from 'react-icons/ri';
+import { AiOutlineEdit } from 'react-icons/ai';
 
 const HomePage = () => {
   const [empData, setEmpData] = useState([]);
@@ -18,6 +20,7 @@ const HomePage = () => {
   const [message, setMessage] = useState("");
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [newSupplier, setNewSupplier] = useState({
     supplierName: "",
     paymentTerms: ""
@@ -123,6 +126,23 @@ const openEditModal = (supplier) => {
     setIsEditModalOpen(false);
   };
 
+  
+const openDeleteModal = (id) => {
+  setCurrentEditSupplier({
+    _id: id,
+    // supplierName: supplier.suppliername,
+    // paymentTerms: supplier.paymentterm
+  });
+  setIsDeleteModalOpen(true);
+};
+
+
+  const closeDeleteModal = () => {
+    setIsDeleteModalOpen(false);
+  };
+
+
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewSupplier((prev) => ({ ...prev, [name]: value }));
@@ -191,6 +211,34 @@ const openEditModal = (supplier) => {
       toast.error("Error  in updating supplier: " + error.message);
     }
   };
+
+
+  
+
+
+
+const handleDeleteSupplier = async () => {
+  const {_id}=currentEditSupplier
+  console.log(" Your Id Is", _id)
+
+  if(_id){
+    console.log(" Your Id Is", _id)
+    // return;
+  
+  }
+  try {
+    const response = await axios.delete(`https://suplierdatabackend-2.onrender.com/api/v1/deleteUser/${_id}`);
+    console.log("Your response",response);
+    if (response.status === 200) {
+      toast.success("Supplier deleted successfully");
+      setEmpData(empData.filter((supplier) => supplier._id !== _id));
+    }
+    setIsDeleteModalOpen(false);
+  } catch (error) {
+    console.error("Error deleting supplier:", error);
+    toast.error("Error deleting supplier: " + error.message);
+  }
+};
 
   const filteredData = empData.filter((person) => {
     return (
@@ -314,9 +362,9 @@ const openEditModal = (supplier) => {
                                   Actions
                                 </th>
                               </tr>
-                            </thead>
-                            <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
-                              {displayedData.map((supplier, index) => (
+                             </thead>
+                             <tbody className="bg-white divide-y divide-gray-200 dark:divide-gray-700 dark:bg-gray-900">
+                               {displayedData.map((supplier, index) => (
                                 <tr key={index}>
                                   <td className="px-12 py-4 whitespace-nowrap">
                                     <div className="text-sm text-gray-900 dark:text-white">
@@ -329,12 +377,20 @@ const openEditModal = (supplier) => {
                                   <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
                                     <button
                                       onClick={() => openEditModal(supplier   )}
-                                      className="px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-blue-600"
+                                      className="px-2 py-1 bg-indigo-600 text-white rounded-md hover:bg-blue-600"
                                     >
-                                      Edit
+                                      
+                                      <AiOutlineEdit/>
                                     </button>
-                                  </td>
-                                </tr>
+                                        <button
+                                        onClick={() => openDeleteModal(supplier._id)}
+                                        // onClick={() => handleDeleteSupplier(supplier._id)}
+                                        className="ml-2 px-2 py-1 bg-red-500 text-white rounded-md hover:bg-red-400"
+                                        >
+                                        <RiDeleteBinLine />
+                                        </button>
+                                   </td>
+                                 </tr>
                               ))}
                             </tbody>
                           </table>
@@ -369,8 +425,8 @@ const openEditModal = (supplier) => {
           )}
         </div>
 
-        {/* Add Modal */}
-        {isAddModalOpen && (
+         {/* Add Modal */}
+         {isAddModalOpen && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
             <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
@@ -420,8 +476,8 @@ const openEditModal = (supplier) => {
           </div>
         )}
 
-        {/* Edit Modal */}
-        {isEditModalOpen && (
+         {/* Edit Modal */}
+         {isEditModalOpen && (
           <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
             <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
               <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
@@ -470,6 +526,63 @@ const openEditModal = (supplier) => {
             </div>
           </div>
         )}
+
+
+
+
+
+        {/* ====================== */}
+
+
+        {isDeleteModalOpen && (
+          <div className="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center">
+            <div className="bg-white rounded-lg overflow-hidden shadow-xl transform transition-all sm:max-w-lg sm:w-full">
+              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                <div className="sm:flex sm:items-start">
+                  <div className="mt-3 text-center sm:mt-0 sm:text-left">
+                    <h3 className="text-lg leading-6 font-medium text-gray-900">
+                      Are You Sure You Want To Delete ?
+                    </h3>
+                    {/* <div className="mt-2">
+                      <input
+                        type="text"
+                        name="supplierName"
+                        value={currentEditSupplier.supplierName}
+                        onChange={handleEditInputChange}
+                        placeholder="Supplier Name"
+                        className="w-full p-2 border border-gray-300 rounded-md"
+                      />
+                      <input
+                        type="text"
+                        name="paymentTerms"
+                        value={currentEditSupplier.paymentTerms}
+                        onChange={handleEditInputChange}
+                        placeholder="Payment Terms"
+                        className="w-full p-2 mt-2 border border-gray-300 rounded-md"
+                      />
+                    </div> */}
+                  </div>
+                </div>
+              </div>
+              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+                <button
+                  type="button"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm"
+                  onClick={handleDeleteSupplier}
+                >
+                  Yes
+                </button>
+                <button
+                  type="button"
+                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:w-auto sm:text-sm"
+                  onClick={closeDeleteModal}
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </section>
       <style>{`
          .loader {
@@ -497,3 +610,5 @@ const openEditModal = (supplier) => {
  };
 
  export default HomePage;
+
+
