@@ -8,7 +8,7 @@ import { IoLogOut } from "react-icons/io5";
 import { useNavigate } from "react-router-dom";
 import { RiDeleteBinLine } from "react-icons/ri";
 import { AiOutlineEdit } from "react-icons/ai";
-
+// import Sidebar from "../components/Sidebar";
 const HomePage = () => {
   const [empData, setEmpData] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,6 +28,11 @@ const HomePage = () => {
     supplierName: "",
     paymentTerms: "",
   });
+  const [topPaymentTerm1, setTopPaymentTerm1] = useState("");
+  const [topPaymentTerm2, setTopPaymentTerm2] = useState("");
+  const [topPaymentTermId1, setTopPaymentTermId1] = useState("");
+  const [topPaymentTermId2, setTopPaymentTermId2] = useState("");
+
   // console.log("your state id" , id);
   const [loading, setLoading] = useState(false);
 
@@ -38,7 +43,20 @@ const HomePage = () => {
         const response = await axios.get(
           "https://suplierdatabackend-2.onrender.com/api/v1/getallUsers"
         );
+        console.log("your current respopnse", response);
         const data = response.data.data;
+
+        const topPaymentTerm = response.data.topPaymentTerms[0];
+        const topPaymentTerm1 = response.data.topPaymentTerms[1];
+        console.log(topPaymentTerm);
+        setTopPaymentTerm1(topPaymentTerm._id);
+        setTopPaymentTermId1(topPaymentTerm.count);
+        setTopPaymentTerm2(topPaymentTerm1._id);
+        setTopPaymentTermId2(topPaymentTerm1.count);
+
+        const id = topPaymentTerm._id;
+        const count = topPaymentTerm.count;
+
         setEmpData(data);
         console.log("your data", data);
       } catch (error) {
@@ -269,11 +287,12 @@ const HomePage = () => {
   };
 
   return (
-    <div>
+    <div className="flex flex col ">
+       {/* <Sidebar logout={LogOut} /> */}
       <section className="container px-4 mx-auto py-4">
         <ToastContainer />
         <div className="flex flex-col space-y-4">
-          <Link>
+          {/* <Link>
             <button
               onClick={LogOut}
               className="border-red-400 rounded-md bg-indigo-600 text-white hover:text-black hover:bg-red-400 flex items-center justify-center space-x-2 "
@@ -282,7 +301,25 @@ const HomePage = () => {
               <span>Log Out</span>
               <IoLogOut />
             </button>
-          </Link>
+          </Link> */}
+
+          <div className="flex flex-row justify-center space-x-10">
+            <div className=" space-x-3 flex  bg-gray-800 w-80 h-20 text-white border border-gray-600 rounded-lg flex items-center justify-center shadow-lg hover:bg-gray-700 transition duration-300 ease-in-out">
+              <p className="text-3xl sm:text-1xl font-bold text-indigo-300">
+                {topPaymentTerm1}{" "}
+              </p>
+
+              <p className="text-3xl ">{topPaymentTermId1} </p>
+            </div>
+            <div className=" space-x-3 flex  bg-gray-800 w-80 h-20 text-white border border-gray-600 rounded-lg flex items-center justify-center shadow-lg hover:bg-gray-700 transition duration-300 ease-in-out">
+              <p className="text-3xl font-bold text-indigo-300">
+                {" "}
+                {topPaymentTerm2}{" "}
+              </p>
+
+              <p className="text-3xl ">{topPaymentTermId2} </p>
+            </div>
+          </div>
 
           {loading ? (
             <div className="flex justify-center items-center h-96">
@@ -331,24 +368,39 @@ const HomePage = () => {
                   justifyContent: "flex-end",
                   width: "100%",
                 }}
-              >
-                <button
-                  onClick={openAddModal}
-                  className="w-full rounded-md bg-indigo-600 px-3.5 py-1.5 text-sm font-semibold leading-7 text-white hover:bg-indigo-500"
-                >
-                  Add Supplier
-                </button>
-              </div>
+              ></div>
               <div>
-                <div className="flex mt-9">
+                {/* <div className="flex mt-9">
                   <input
                     type="text"
-                    placeholder="Search by name"
+                    placeholder="Search by supplier name.."
                     value={searchQuery}
                     onChange={handleSearch}
-                    className="p-2 border border-gray-300 rounded-md w-full"
+                    className=" border border-gray-300 rounded-md w-[1200px] "
                   />
+                  <button
+                  onClick={openAddModal}
+                  className=" rounded-md bg-indigo-600 px-3.5 py-1.5 text-sm font-semibold leading-7 text-white hover:bg-indigo-500 ml-12"
+                  >
+                   Add  Supplier 
+                  </button>
+                </div> */}
+                <div className="flex justify-center items-center mt-9 ">
+                  <input
+                    type="text"
+                    placeholder="Search by supplier name.."
+                    value={searchQuery}
+                    onChange={handleSearch}
+                    className="border border-gray-300 rounded-md w-[1300px] px-2 py-1 h-10"
+                  />
+                  <button
+                    onClick={openAddModal}
+                    className="rounded-md bg-indigo-600 px-3.5 py-1.5 text-sm font-semibold leading-7 text-white hover:bg-indigo-500 ml-4 w-32"
+                  >
+                    Supplier +
+                  </button>
                 </div>
+
                 <div className="flex flex-col mt-6">
                   <div className="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
                     <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
@@ -551,7 +603,6 @@ const HomePage = () => {
                     <h3 className="text-lg leading-6 font-medium text-gray-900">
                       Are You Sure You Want To Delete ?
                     </h3>
-                  
                   </div>
                 </div>
               </div>
